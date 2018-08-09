@@ -3,15 +3,22 @@ import HttpErrors from 'http-errors';
 import Profile from '../model/profile';
 import bearerAuthMiddleware from '../lib/middleware/bearer-auth-middleware';
 import logger from '../lib/logger';
-import Attachment from '../model/attachment';
-import Garage from '../model/garage';
-import MaintenanceLog from '../model/maintenance-log';
-import Vehicle from '../model/vehicle';
+import Coach from '../model/coach';
+import Mentor from '../model/mentor';
+import School from '../model/school';
+import ScoreSheet from '../model/score-sheet';
+import Sport from '../model/sport';
+import Staff from '../model/staff';
+import Subject from '../model/subject';
+import Teacher from '../model/teacher';
+import Team from '../model/team';
+
+
 
 
 const profileRouter = new Router();
 
-profileRouter.post('/api/profiles', bearerAuthMiddleware, (request, response, next) => {
+profileRouter.post('/api/v1/profiles', bearerAuthMiddleware, (request, response, next) => {
   logger.log(logger.INFO, `.post /api/profiles req.body: ${request.body}`);
   Profile.init()
     .then(() => {
@@ -28,7 +35,7 @@ profileRouter.post('/api/profiles', bearerAuthMiddleware, (request, response, ne
   return undefined;
 });
 
-profileRouter.get(['/api/profiles', '/api/profiles/me'], bearerAuthMiddleware, (request, response, next) => {
+profileRouter.get(['/api/v1/profiles', '/api/v1/profiles/me'], bearerAuthMiddleware, (request, response, next) => {
   if (!request.profile) return next(new HttpErrors(404, 'PROFILE ROUTER GET: profile not found. Missing login info.', { expose: false }));
 
   Profile.init()
@@ -44,7 +51,7 @@ profileRouter.get(['/api/profiles', '/api/profiles/me'], bearerAuthMiddleware, (
 });
 
 // update route
-profileRouter.put('/api/profiles', bearerAuthMiddleware, (request, response, next) => {
+profileRouter.put('/api/v1/profiles', bearerAuthMiddleware, (request, response, next) => {
   if (!request.profile) return next(new HttpErrors(404, 'PROFILE ROUTER GET: profile not found. Missing login info.', { expose: false }));
 
   if (!Object.keys(request.body).length) return next(new HttpErrors(400, 'PUT PROFILE ROUTER: Missing request body', { expose: false }));
@@ -63,7 +70,7 @@ profileRouter.put('/api/profiles', bearerAuthMiddleware, (request, response, nex
   return undefined;
 });
 
-profileRouter.delete('/api/profiles', bearerAuthMiddleware, (request, response, next) => {
+profileRouter.delete('/api/v1/profiles', bearerAuthMiddleware, (request, response, next) => {
   if (!request.query.id) return next(new HttpErrors(400, 'DELETE PROFILE ROUTER: bad query', { expose: false }));
 
   Profile.init()
@@ -71,18 +78,36 @@ profileRouter.delete('/api/profiles', bearerAuthMiddleware, (request, response, 
       return Profile.findByIdAndRemove(request.query.id);
     })
     .then(() => {
-      return Garage.remove({ profileId: request.query.id });
+      return Coach.remove({ profileId: request.query.id });
     })
     .then(() => {
-      return Vehicle.remove({ profileId: request.query.id });
+      return Mentor.remove({ profileId: request.query.id });
+    })
+    .then(() =>{
+      return School.remove({ profileID: request.query.id });
     })
     .then(() => {
-      return Attachment.remove({ profileId: request.query.id });
+      return ScoreSheet.remove({ profileID: request.query.id });
     })
     .then(() => {
-      MaintenanceLog.remove({ profileId: request.query.id });
+      return Sport.remove({ profileID: request.query.id });
+    })
+    .then(() => {
+      return Staff.remove({ profileID: request.query.id });
+    })
+    .then(() => {
+      return Subject.remove({ profileID: request.query.id });
+    })
+    .then(() => {
+      return Teacher.remove({ profileID: request.query.id });
+    })
+    .then(() => {
+       Team.remove({ profileID: request.query.id });
       return response.sendStatus(200);
+      
     })
+    
+   
     .catch(next);
   return undefined;
 });
